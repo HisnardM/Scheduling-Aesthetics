@@ -10,9 +10,11 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -61,22 +63,13 @@ public class AgendamentoController {
 	}
 	
 	@PostMapping
-	public ResponseEntity<?> criarAgendamento(@RequestBody AgendamentoRequest agendamentoRequest) {
-	    // Verifica se os valores de dataAgendamento e horaAgendamento não são nulos e não vazios
-		if (agendamentoRequest.getDataAgendamento() != null && agendamentoRequest.getHoraAgendamento() != null) {
-		 
-			DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-            DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
-
-            // Obtém as datas e horas como strings
-            LocalDate dataAgendamentoStr = agendamentoRequest.getDataAgendamento();
-            LocalTime horaAgendamentoStr = agendamentoRequest.getHoraAgendamento();
-
+	public ResponseEntity<?> criarAgendamento(@RequestBody Agendamento agendamento) {
+	    if (agendamento.getDataAgendamento() != null && agendamento.getHoraAgendamento() != null) {
 	        // Obtém os nomes das entidades do request
-	        String nomeCliente = agendamentoRequest.getNomeCliente();
-	        String nomeFuncionario = agendamentoRequest.getNomeFuncionario();
-	        String nomeProcedimento = agendamentoRequest.getNomeProcedimento();
-	        String nomeAreaCorpo = agendamentoRequest.getNomeAreaCorpo();
+	        String nomeCliente = agendamento.getNomeCliente();
+	        String nomeFuncionario = agendamento.getNomeFuncionario();
+	        String nomeProcedimento = agendamento.getNomeProcedimento();
+	        String nomeAreaCorpo = agendamento.getNomeAreaCorpo();
 
 	        // Valida os nomes das entidades e busca as entidades correspondentes do banco de dados
 	        Clientes cliente = clientesRepository.findByNome(nomeCliente);
@@ -86,24 +79,41 @@ public class AgendamentoController {
 
 	        // Verifica se as entidades foram encontradas
 	        if (cliente == null || funcionario == null || procedimento == null || areaCorpo == null) {
-	            return ResponseEntity.badRequest().body("Alguma das entidades não foi encontrada.");
+	            return ResponseEntity.badRequest().body("Um ou mais campos não condizem com os registros.");
 	        }
 
-	        // Agora você tem as entidades correspondentes com base nos nomes e pode criar o agendamento.
-	        Agendamento agendamento = new Agendamento();
+	        // Cria a instância de Agendamento com as entidades e datas/horas corretas
 	        agendamento.setClientes(cliente);
 	        agendamento.setFuncionarios(funcionario);
 	        agendamento.setProcedimentos(procedimento);
 	        agendamento.setAreasCorpo(areaCorpo);
-	        LocalDate dataAgendamento = null;
-			agendamento.setDataAgendamento(dataAgendamento);
-	        LocalTime horaAgendamento = null;
-			agendamento.setHoraAgendamento(horaAgendamento);
+
+	        // Salva no repositório
+	        agendamentosRepository.save(agendamento);
 
 	        return ResponseEntity.ok("Agendamento criado com sucesso.");
-		}
-	        else {
+	    } else {
 	        return ResponseEntity.badRequest().body("Data e hora de agendamento não podem ser nulas ou vazias.");
 	    }
 	}
-		}
+	
+    @PutMapping("/{id}")
+    public ResponseEntity<Agendamento> atualizarAgendamento(@PathVariable Long id, @RequestBody Agendamento agendamento) {
+        if (!agendamentosRepository.existsById(id)) {
+            return ResponseEntity.notFound().build();
+        }
+        agendamento.setId(id);
+        Agendamento atualizado = agendamentosRepository.save(agendamento);
+        return ResponseEntity.ok(atualizado);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> excluirAgendamento(@PathVariable Long id) {
+        if (!agendamentosRepository.existsById(id)) {
+            return ResponseEntity.notFound().build();
+        }
+        agendamentosRepository.deleteById(id);
+        return ResponseEntity.noContent().build();
+    }
+	
+}

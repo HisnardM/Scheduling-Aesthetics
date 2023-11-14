@@ -123,5 +123,25 @@ public class Agendamento {
 		// TODO Auto-generated method stub
 		
 	}
+
+	public String getNomeCliente() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public String getNomeFuncionario() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public String getNomeProcedimento() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public String getNomeAreaCorpo() {
+		// TODO Auto-generated method stub
+		return null;
+	}
     
 }
